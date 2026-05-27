@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Login - WoundAI{% endblock %}
+
+{% block content %}
+
+<div class="auth-wrapper">
+    <div class="glass-card">
+        <div class="auth-header">
+            <h2>Clinical Login</h2>
+            <p>Enter your patient credentials to access diagnostic logs.</p>
+        </div>
+        
+        <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Enter username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required autocomplete="current-password">
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Authenticate Session</button>
+        </form>
+        
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed var(--border-color); font-size: 0.8rem; color: var(--text-muted); text-align: center;">
+            <strong>System Seed Account:</strong> admin / admin123
+        </div>
+
+        <div class="auth-footer">
+            New patient? <a href="{{ url_for('register') }}">Create clinical account</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

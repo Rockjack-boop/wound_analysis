@@ -1,0 +1,38 @@
+# Python temporary files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+ENV/
+
+# Compiled C shared libraries
+c_modules/*.dll
+c_modules/*.so
+c_modules/*.dylib
+c_modules/*.obj
+c_modules/*.o
+c_modules/*.lib
+c_modules/*.exp
+
+# Local Patient Database
+database/*.db
+
+# Secure User Uploads & Preprocessing Outputs
+static/uploads/*
+!static/uploads/.gitkeep
+static/processed/*
+!static/processed/.gitkeep
+
+# IDE Configs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+.vercel

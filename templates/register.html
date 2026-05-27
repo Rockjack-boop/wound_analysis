@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Registration - WoundAI{% endblock %}
+
+{% block content %}
+
+<div class="auth-wrapper">
+    <div class="glass-card">
+        <div class="auth-header">
+            <h2>Patient Registration</h2>
+            <p>Initialize a secure, encrypted profile for automated diagnostic tracking.</p>
+        </div>
+        
+        <form action="{{ url_for('register') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label" for="username">Username</label>
+                <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required autocomplete="username">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="email">Email Address</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="name@domain.com" required autocomplete="email">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="At least 6 characters" required autocomplete="new-password">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label class="form-label" for="role">Clinical Role Type</label>
+                <select class="form-control form-select" id="role" name="role">
+                    <option value="user" selected>Patient (Standard Profiling)</option>
+                    <option value="admin">Clinician / Administrator</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Profiler Account</button>
+        </form>
+        
+        <div class="auth-footer">
+            Already registered? <a href="{{ url_for('login') }}">Access clinical login</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

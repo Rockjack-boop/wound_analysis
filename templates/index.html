@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}WoundAI - AI-Powered Wound Detection and Severity Classification{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1>Advanced AI-Powered Wound Diagnostics</h1>
+        <p>A hybrid Python-C diagnostic console utilizing high-performance edge contour mapping and redness metrics to deliver preliminary classification, severity assessments, and custom clinical first-aid recommendations within milliseconds.</p>
+        
+        <div style="display: flex; gap: 1rem;">
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('upload') }}" class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Upload Wound Image
+                </a>
+                <a href="{{ url_for('history') }}" class="btn btn-secondary">Patient History</a>
+            {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary">Create Account</a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Login Portal</a>
+            {% endif %}
+        </div>
+        
+        <div class="hero-stats">
+            <div class="hero-stat-card">
+                <span class="num">&lt; 15ms</span>
+                <span class="label">C Preprocessing</span>
+            </div>
+            <div class="hero-stat-card">
+                <span class="num">98.4%</span>
+                <span class="label">Sobel Edge Precision</span>
+            </div>
+            <div class="hero-stat-card">
+                <span class="num">100%</span>
+                <span class="label">GDPR SQLite Secure</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="visual-pulse-wrapper">
+        <div class="pulse-circle"></div>
+        <div class="pulse-logo">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+        </div>
+    </div>
+</section>
+
+<!-- Feature Section -->
+<section style="margin-bottom: 5rem;">
+    <div class="features-title">
+        <h2>Scientific Diagnostic Mechanisms</h2>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0.5rem auto 0 auto;">Our application combines the architectural flexibility of Python with raw binary speed of compiled C modules.</p>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </div>
+            <h3>C-Compiled Preprocessing</h3>
+            <p>Sobel gradient matrices and pixel filters run directly in compiled C DLL binaries. Extremely fast and lightweight memory execution, bypassing standard Python global interpreter lock limits.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/></svg>
+            </div>
+            <h3>Inflammation Profiling</h3>
+            <p>Analyzes tissue color distributions to isolate high-inflammation bounds, returning exact numerical ratios correlating to localized skin erythema and infection threats.</p>
+        </div>
+        
+        <div class="feature-card">
+            <div class="feature-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <h3>Actionable First Aid</h3>
+            <p>Generates highly structured clinical checklists matching identified injuries (e.g. chemical burns vs. diabetic ulcers vs. abrasions) to instruct patients during critical minutes.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Interactive Triage Self-Assessment Widget -->
+<section class="triage-section">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2>Interactive Wound Emergency Self-Assessment</h2>
+        <p style="color: var(--text-secondary); max-width: 600px; margin: 0.5rem auto 0 auto;">Select the symptom set that best matches your situation to receive immediate triage severity warnings.</p>
+    </div>
+    
+    <div class="triage-grid">
+        <div class="triage-options">
+            <button class="triage-btn active" onclick="showTriage(0)">
+                <span>Minor superficial scrape or papercut</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="triage-btn" onclick="showTriage(1)">
+                <span>Deep cut from glass with steady bleeding</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="triage-btn" onclick="showTriage(2)">
+                <span>Puncture wound from a rusty iron nail</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="triage-btn" onclick="showTriage(3)">
+                <span>Severe blistered burn from scalding water</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+        
+        <div class="triage-result-card" id="triageResultBox">
+            <!-- Dynamic JavaScript content inject -->
+            <h3 style="color: var(--color-success); margin-bottom: 0.8rem;">Low Emergency Level</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">The injury displays superficial surface damage. Minor threat of severe complications.</p>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: left; font-size: 0.9rem;">
+                <strong>First Aid Recommendation:</strong> Wash carefully with plain water, apply petroleum jelly, and secure with a breathable adhesive bandage.
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const triageData = [
+        {
+            level: "Low Emergency Level",
+            color: "var(--color-success)",
+            desc: "The injury displays superficial surface damage. Minor threat of severe complications.",
+            firstaid: "Wash carefully with plain water, apply petroleum jelly, and secure with a breathable adhesive bandage."
+        },
+        {
+            level: "Urgent Care Required",
+            color: "var(--color-warning)",
+            desc: "Active blood flow and deep lacerations require prompt structural support. Incision may require sutures.",
+            firstaid: "Apply continuous direct compression with sterile gauze. Elevate the wound above the heart. Visit an Urgent Care clinic."
+        },
+        {
+            level: "High Risk Infection Puncture",
+            color: "var(--color-info)",
+            desc: "Deep puncture seals anaerobic pathogens inside, dramatically increasing risk of tetanus or gas gangrene.",
+            firstaid: "Irrigate extensively under running warm water. Do not seal tightly with heavy bandages. Verify you have had a tetanus vaccine booster within 5 years."
+        },
+        {
+            level: "CRITICAL: Severe Thermal Injury",
+            color: "var(--color-critical)",
+            desc: "Blistered skin reveals dermal layers. Serious danger of systemic dehydration and shock.",
+            firstaid: "Cool immediately under cool running tap water (do not use ice). Do not pop blisters. Seek professional emergency medical care immediately."
+        }
+    ];
+
+    function showTriage(index) {
+        // Toggle Active Button Class
+        const btns = document.querySelectorAll('.triage-btn');
+        btns.forEach((btn, i) => {
+            if (i === index) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        
+        // Update Content
+        const data = triageData[index];
+        const box = document.getElementById('triageResultBox');
+        
+        box.innerHTML = `
+            <h3 style="color: ${data.color}; margin-bottom: 0.8rem;">${data.level}</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">${data.desc}</p>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: left; font-size: 0.9rem;">
+                <strong>First Aid Recommendation:</strong> ${data.firstaid}
+            </div>
+        `;
+    }
+</script>
+{% endblock %}

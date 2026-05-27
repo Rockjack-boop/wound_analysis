@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Wound Image - WoundAI{% endblock %}
+
+{% block content %}
+
+<div class="upload-layout">
+    <!-- Left Column: Upload Form -->
+    <div class="glass-card">
+        <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <!-- Upload Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+            </svg>
+            <span>Wound Image Upload</span>
+        </h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">
+            Upload a clear, well-lit close-up photograph of the wound. Allowed file types are strictly limited to PNG, JPG, and JPEG.
+        </p>
+        
+        <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+            <!-- Hidden File Input -->
+            <input type="file" id="wound_image" name="wound_image" accept="image/png, image/jpeg, image/jpg" style="display: none;" required>
+            
+            <!-- Drag Area -->
+            <div class="upload-drag-area" id="dragArea">
+                <div class="upload-icon-pulse" id="dragIcon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 16 12 12 8 16"></polyline>
+                        <line x1="12" y1="12" x2="12" y2="21"></line>
+                        <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path>
+                        <polyline points="16 16 12 12 8 16"></polyline>
+                    </svg>
+                </div>
+                <div class="upload-instructions">
+                    <h3>Drag & Drop Wound Photo</h3>
+                    <p>or click to explore files (Max Size 10MB)</p>
+                </div>
+                <div id="fileSelectedBadge" style="display: none; background: hsla(180, 90% ,45%, 0.12); color: var(--primary); border: 1px solid var(--primary-glow); padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.8rem; font-weight: 600;"></div>
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" id="submitBtn" disabled style="width: 100%; justify-content: center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Trigger AI Diagnostic Profiling
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Right Column: Visualizer Edge-Detection Live Preview -->
+    <div class="visualizer-preview-container">
+        <!-- Interactive loading blocker, hidden initially -->
+        <div class="processing-overlay" id="preloader" style="display: none;">
+            <div class="spinner" style="width: 45px; height: 45px; border: 4px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: rotate 1s linear infinite;"></div>
+            <div class="scanner-bar"></div>
+            <div style="text-align: center;">
+                <h4 style="color: var(--primary); margin-bottom: 0.25rem;">C-Edge Detector Pipeline Active</h4>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Asynchronously convolving pixel structures...</p>
+            </div>
+        </div>
+        
+        <!-- Standard placeholder displayed before image selection -->
+        <div class="visualizer-placeholder" id="previewPlaceholder">
+            <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--border-color)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+            <h3>Live Pre-Analysis Preview</h3>
+            <p style="color: var(--text-secondary); max-width: 250px; margin: 0.4rem auto 0 auto; font-size: 0.85rem;">
+                Select a file to run real-time ctypes-assisted Sobel edge extraction automatically.
+            </p>
+        </div>
+        
+        <!-- Render grid showing previews -->
+        <div class="preview-grid" id="previewDisplay" style="display: none;">
+            <div class="preview-box">
+                <span class="preview-badge">C-Sobel Gradient Output</span>
+                <img id="processedPreview" src="" alt="Preprocessed C Edge output">
+            </div>
+            
+            <div style="text-align: center; padding: 0.5rem; background: hsla(222, 35%, 11%, 0.8); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">
+                    C Preprocess Speed: <strong style="color: var(--primary);" id="previewTime">0.0ms</strong> | Mode: <strong style="color: var(--secondary);" id="previewMode">C-Shared-Library</strong>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dragArea = document.getElementById('dragArea');
+    const fileInput = document.getElementById('wound_image');
+    const submitBtn = document.getElementById('submitBtn');
+    const previewPlaceholder = document.getElementById('previewPlaceholder');
+    const previewDisplay = document.getElementById('previewDisplay');
+    const processedPreview = document.getElementById('processedPreview');
+    const preloader = document.getElementById('preloader');
+    const fileBadge = document.getElementById('fileSelectedBadge');
+    const previewTime = document.getElementById('previewTime');
+    const previewMode = document.getElementById('previewMode');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Trigger File Picker click on Drag Area click
+    dragArea.addEventListener('click', () => fileInput.click());
+
+    // Drag-over styling
+    dragArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dragArea.classList.add('dragover');
+    });
+
+    dragArea.addEventListener('dragleave', () => {
+        dragArea.classList.remove('dragover');
+    });
+
+    dragArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelection(e.dataTransfer.files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelection(e.target.files[0]);
+        }
+    });
+
+    // Handle asynchronous AJAX Edge preprocessing preview
+    function handleFileSelection(file) {
+        // Validate size
+        if (file.size > 10 * 1024 * 1024) {
+            alert("File is too large. Maximum allowed size is 10MB.");
+            return;
+        }
+
+        // Show selected file badge
+        fileBadge.innerText = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+        fileBadge.style.display = 'inline-block';
+        
+        // Enable Trigger button
+        submitBtn.disabled = false;
+        
+        // Trigger Preloader & AJAX Preview
+        previewPlaceholder.style.display = 'none';
+        preloader.style.display = 'flex';
+        previewDisplay.style.display = 'none';
+
+        // Prepare Form Data for AJAX preview
+        const formData = new FormData();
+        formData.append('wound_image', file);
+
+        fetch("{{ url_for('preprocess_preview') }}", {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Preprocessing preview failed");
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Populate processed C edge-detected preview
+                processedPreview.src = data.preview_url;
+                previewTime.innerText = `${data.duration_ms} ms`;
+                previewMode.innerText = data.c_mode;
+                
+                // Toggle Views
+                preloader.style.display = 'none';
+                previewDisplay.style.display = 'grid';
+            } else {
+                throw new Error(data.error);
+            }
+        })
+        .catch(err => {
+            console.error("AJAX Preprocess Error:", err);
+            // Graceful fallback - hide loader, display placeholder warning
+            preloader.style.display = 'none';
+            previewPlaceholder.style.display = 'flex';
+            previewPlaceholder.querySelector('h3').innerText = "Live Preview Unavailable";
+            previewPlaceholder.querySelector('p').innerText = "AI will still work! Simply click 'Trigger AI Diagnostic Profiling' to run standard analysis.";
+        });
+    }
+
+    // Interactive Submit Form Loader Overlay
+    uploadForm.addEventListener('submit', () => {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+            <div class="spinner" style="width: 18px; height: 18px; border: 2.5px solid var(--border-color); border-top-color: var(--primary); border-radius: 50%; animation: rotate 1s linear infinite; margin-right: 0.5rem; display: inline-block; vertical-align: middle;"></div>
+            Triggering C-AI Medical Diagnostic Core...
+        `;
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AI-Powered Clinical Wound Detection and Severity Classification System - High-Performance Python & C Hybrid Diagnostic Platform.">
+    <title>{% block title %}WoundAI - Diagnostic Platform{% endblock %}</title>
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Navigation Header -->
+    <header class="nav-header">
+        <a href="{{ url_for('home') }}" class="nav-logo" id="navLogo">
+            <!-- Medical Heartbeat Shield Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M8 12h3l1-3 2 6 1-3h2"/>
+            </svg>
+            <span>Wound<span style="color: var(--primary);">AI</span></span>
+        </a>
+        
+        <nav>
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}" class="nav-item {% if request.path == '/' %}active{% endif %}">Home</a></li>
+                {% if session.get('user_id') %}
+                    <li><a href="{{ url_for('upload') }}" class="nav-item {% if request.path == '/upload' %}active{% endif %}">Upload Incision</a></li>
+                    <li><a href="{{ url_for('history') }}" class="nav-item {% if request.path == '/history' %}active{% endif %}">Patient History</a></li>
+                    {% if session.get('role') == 'admin' %}
+                        <li><a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.path == '/admin' %}active{% endif %}">Admin Panel</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <div class="nav-auth">
+            {% if session.get('user_id') %}
+                <span style="font-size: 0.85rem; color: var(--text-secondary); margin-right: 0.5rem;">
+                    Patient: <strong>{{ session.get('username') }}</strong>
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem; font-size: 0.85rem;">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm" style="padding: 0.4rem 1rem; font-size: 0.85rem; color: #04080f;">Sign Up</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <main class="main-container">
+        
+        <!-- Flash Notification System -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" id="alert-{{ loop.index }}">
+                            {% if category == 'success' %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            {% else %}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                            {% endif %}
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer View -->
+    <footer>
+        <p>&copy; 2026 WoundAI Diagnostic Platform. Built with secure hybrid Python and high-performance compiled C. For educational and preliminary diagnostic purposes only.</p>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+    
+    <script>
+        // Automatic fade out for alerts
+        document.querySelectorAll('.alert').forEach(function(alert) {
+            setTimeout(function() {
+                alert.style.transition = 'opacity 0.8s ease';
+                alert.style.opacity = '0';
+                setTimeout(function() {
+                    alert.remove();
+                }, 800);
+            }, 4000);
+        });
+    </script>
+</body>
+</html>

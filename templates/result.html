@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}AI Wound Diagnostic Report - WoundAI{% endblock %}
+
+{% block content %}
+
+<div class="result-layout">
+    
+    <!-- Header Banner -->
+    <div class="glass-card" style="padding: 1.8rem 2.2rem;">
+        <div class="result-header-panel">
+            <div>
+                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">AI Diagnostic Report</span>
+                <h1 style="font-size: 2.2rem; margin-top: 0.2rem; color: var(--primary);">
+                    Incision: <span style="color: #fff;">{{ report.wound_type }}</span>
+                </h1>
+            </div>
+            
+            <!-- Dynamic Emergency Badge -->
+            {% if report.emergency_level.startswith('Critical') %}
+                <div class="badge-emergency critical">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    {{ report.emergency_level }}
+                </div>
+            {% elif report.emergency_level.startswith('Urgent') %}
+                <div class="badge-emergency urgent">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    {{ report.emergency_level }}
+                </div>
+            {% elif report.emergency_level.startswith('Moderate') %}
+                <div class="badge-emergency moderate">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    {{ report.emergency_level }}
+                </div>
+            {% else %}
+                <div class="badge-emergency low">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    {{ report.emergency_level }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Statistical Metrics Grid -->
+    <div class="diagnostic-gauges-grid">
+        <div class="gauge-card {% if report.major_minor == 'Major' %}critical-gauge{% endif %}">
+            <span class="label">Classification</span>
+            <span class="value">{{ report.major_minor }}</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">Severity Index</p>
+        </div>
+        
+        <div class="gauge-card">
+            <span class="label">Confidence Score</span>
+            <span class="value" style="color: var(--secondary);">{{ report.confidence }}%</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">AI Engine Certainty</p>
+        </div>
+        
+        <div class="gauge-card">
+            <span class="label">Infection Threat</span>
+            <span class="value" style="{% if report.infection_possibility == 'High' %}color: var(--color-critical);{% elif report.infection_possibility == 'Medium' %}color: var(--color-warning);{% else %}color: var(--color-success);{% endif %}">
+                {{ report.infection_possibility }}
+            </span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">Erythema Proximity</p>
+        </div>
+        
+        <div class="gauge-card">
+            <span class="label">Inflammation Index</span>
+            <span class="value" style="color: var(--color-info);">{{ report.redness_ratio }}%</span>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">{{ report.red_pixel_count }} Active Pixels</p>
+        </div>
+    </div>
+    
+    <!-- Image View Comparison Section (Interactive Carousel) -->
+    <div class="image-comparison-dashboard">
+        <!-- Box 1: Original Image View -->
+        <div class="comparison-box">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Original Photo
+            </h3>
+            <div class="comparison-image-wrapper">
+                <img src="{{ url_for('static', filename=visuals.original) }}" alt="Original uploaded wound image">
+            </div>
+        </div>
+        
+        <!-- Box 2: Preprocessed Image View (Toggled dynamically) -->
+        <div class="comparison-box">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                <span id="processedViewLabel">C-Sobel Gradient Map</span>
+            </h3>
+            <div class="comparison-image-wrapper">
+                <!-- Starts with Sobel edge map -->
+                <img id="processedDisplayImg" src="{{ url_for('static', filename=visuals.sobel) }}" alt="C Preprocessed wound visualization">
+            </div>
+            
+            <!-- Horizontal visual selector tab buttons -->
+            <div class="visual-tabs">
+                <button class="visual-tab-btn" onclick="toggleView('gray', 'C-Grayscale Luminance', '{{ url_for('static', filename=visuals.gray) }}')">Grayscale</button>
+                <button class="visual-tab-btn active" id="defaultViewTab" onclick="toggleView('sobel', 'C-Sobel Gradient Map', '{{ url_for('static', filename=visuals.sobel) }}')">Sobel Edges</button>
+                <button class="visual-tab-btn" onclick="toggleView('redness', 'C-Redness Inflammation Map', '{{ url_for('static', filename=visuals.redness) }}')">Red Highlights</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actionable Medical Recommendations Checklist -->
+    <div class="treatment-plan-card">
+        <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            Clinical Action Checklist & First Aid Guidance
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+            Please execute the following medical hygiene checklist step-by-step. Toggle the checklist boxes as you accomplish them to stay organized.
+        </p>
+        
+        <ul class="treatment-checklist">
+            {% for bullet in first_aid_bullets %}
+                <li class="checklist-item">
+                    <input type="checkbox" class="checklist-checkbox" id="bullet-{{ loop.index }}">
+                    <div class="checklist-content">
+                        {{ bullet }}
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <!-- Diagnostics Controls / Actions -->
+    <div style="display: flex; gap: 1.5rem; justify-content: flex-start; margin-bottom: 4rem;">
+        <button class="btn btn-secondary" onclick="window.print()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Clinical Report
+        </button>
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">View Patient Log history</a>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary" style="color: #04080f;">Analyze New Wound</a>
+    </div>
+    
+    <!-- Diagnostic Metadata Footer -->
+    <div class="report-meta-footer">
+        <span>Report Signature ID: <strong>WND-{{ report.id }}-{{ "%04d"|format(report.user_id) }}</strong></span>
+        <span>Registered At: <strong>{{ report.created_at }}</strong></span>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleView(type, label, srcUrl) {
+        // Toggle Active Tab Style
+        const btns = document.querySelectorAll('.visual-tab-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        
+        // Find corresponding event target
+        event.target.classList.add('active');
+        
+        // Update Display Elements
+        document.getElementById('processedViewLabel').innerText = label;
+        document.getElementById('processedDisplayImg').src = srcUrl;
+    }
+</script>
+{% endblock %}
