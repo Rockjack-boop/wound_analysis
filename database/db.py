@@ -4,7 +4,11 @@ from datetime import datetime
 
 from werkzeug.security import generate_password_hash
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wound_database.db")
+if "VERCEL" in os.environ:
+    DB_PATH = "/tmp/wound_database.db"
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "wound_database.db")
+
 
 def get_db_connection():
     """

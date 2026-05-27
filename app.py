@@ -9,7 +9,8 @@ from flask import (
     url_for, 
     flash, 
     session, 
-    jsonify
+    jsonify,
+    send_from_directory
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -36,14 +37,33 @@ app = Flask(__name__)
 app.secret_key = "wound_ai_secure_token_secret_key"
 
 # Configuration
-UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
+if "VERCEL" in os.environ:
+    UPLOAD_FOLDER = "/tmp/uploads"
+    PROCESSED_FOLDER = "/tmp/processed"
+else:
+    UPLOAD_FOLDER = os.path.join(app.root_path, "static", "uploads")
+    PROCESSED_FOLDER = os.path.join(app.root_path, "static", "processed")
+
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 10 * 1024 * 1024  # 10 Megabyte limit
 
 # Ensure folders exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(os.path.join(app.root_path, "static", "processed"), exist_ok=True)
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+
+# Custom routes to serve dynamic uploads & processed files from /tmp on Vercel
+@app.route('/static/uploads/<path:filename>')
+def serve_uploads(filename):
+    if "VERCEL" in os.environ:
+        return send_from_directory('/tmp/uploads', filename)
+    return send_from_directory(os.path.join(app.root_path, 'static', 'uploads'), filename)
+
+@app.route('/static/processed/<path:filename>')
+def serve_processed(filename):
+    if "VERCEL" in os.environ:
+        return send_from_directory('/tmp/processed', filename)
+    return send_from_directory(os.path.join(app.root_path, 'static', 'processed'), filename)
 
 # Initialize Database Schema
 init_db()
@@ -194,7 +214,8 @@ def upload():
             
             try:
                 # Trigger C-assisted image feature extraction & diagnostic profiling
-                report_data = analyze_wound_image(save_path, os.path.join(app.root_path, "static"))
+                static_dir = "/tmp" if "VERCEL" in os.environ else os.path.join(app.root_path, "static")
+                report_data = analyze_wound_image(save_path, static_dir)
                 
                 # Save report in the SQLite database
                 report_id = add_report(
@@ -345,7 +366,8 @@ def preprocess_preview():
         
         base_name, ext = os.path.splitext(temp_name)
         sobel_name = f"{base_name}_sobel{ext}"
-        sobel_path = os.path.join(app.root_path, "static", "processed", sobel_name)
+        processed_dir = "/tmp/processed" if "VERCEL" in os.environ else os.path.join(app.root_path, "static", "processed")
+        sobel_path = os.path.join(processed_dir, sobel_name)
         
         try:
             # Trigger Sobel preprocessing exclusively
