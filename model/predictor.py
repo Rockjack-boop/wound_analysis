@@ -53,8 +53,8 @@ def analyze_wound_image(image_path, static_dir):
     
     # 4. Extract metrics from processed images
     # We can measure edge density from the Sobel edge image
-    sobel_img = Image.open(sobel_path).convert("L")
-    sobel_arr = np.array(sobel_img)
+    with Image.open(sobel_path) as sobel_img:
+        sobel_arr = np.array(sobel_img.convert("L"))
     total_pixels = sobel_arr.size
     
     # Calculate Sobel edge density (percentage of pixels exceeding edge threshold)
@@ -67,8 +67,8 @@ def analyze_wound_image(image_path, static_dir):
     # 5. Advanced Medical Diagnostic Inference logic based on C visual characteristics:
     
     # Let's inspect raw image properties using Pillow to determine base brightness
-    original_img = Image.open(image_path).convert("RGB")
-    original_arr = np.array(original_img)
+    with Image.open(image_path) as original_img:
+        original_arr = np.array(original_img.convert("RGB"))
     avg_r = float(np.mean(original_arr[:, :, 0]))
     avg_g = float(np.mean(original_arr[:, :, 1]))
     avg_b = float(np.mean(original_arr[:, :, 2]))
@@ -208,7 +208,22 @@ def analyze_wound_image(image_path, static_dir):
         ]
         
     first_aid_text = "||".join(first_aid_steps)
-    
+
+    import base64
+    def file_to_b64(path):
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    return base64.b64encode(f.read()).decode("utf-8")
+            except Exception as e:
+                print(f"[b64 encode error] {e}")
+        return ""
+
+    original_b64 = file_to_b64(image_path)
+    gray_b64 = file_to_b64(gray_path)
+    sobel_b64 = file_to_b64(sobel_path)
+    redness_b64 = file_to_b64(redness_path)
+
     return {
         "wound_type": wound_type,
         "severity": severity,
@@ -217,6 +232,10 @@ def analyze_wound_image(image_path, static_dir):
         "emergency_level": emergency_level,
         "confidence": round(confidence, 1),
         "first_aid": first_aid_text,
+        "original_b64": original_b64,
+        "gray_b64": gray_b64,
+        "sobel_b64": sobel_b64,
+        "redness_b64": redness_b64,
         "metrics": {
             "edge_density": round(edge_density, 2),
             "redness_ratio": round(redness_ratio, 2),

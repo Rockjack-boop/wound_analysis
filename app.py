@@ -53,13 +53,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 
 # Custom routes to serve dynamic uploads & processed files from /tmp on Vercel
-@app.route('/static/uploads/<path:filename>')
+@app.route('/uploads/<path:filename>')
 def serve_uploads(filename):
     if "VERCEL" in os.environ:
         return send_from_directory('/tmp/uploads', filename)
     return send_from_directory(os.path.join(app.root_path, 'static', 'uploads'), filename)
 
-@app.route('/static/processed/<path:filename>')
+@app.route('/processed/<path:filename>')
 def serve_processed(filename):
     if "VERCEL" in os.environ:
         return send_from_directory('/tmp/processed', filename)
@@ -229,7 +229,11 @@ def upload():
                     confidence=report_data["confidence"],
                     first_aid=report_data["first_aid"],
                     red_pixel_count=report_data["metrics"]["red_pixels"],
-                    redness_ratio=report_data["metrics"]["redness_ratio"]
+                    redness_ratio=report_data["metrics"]["redness_ratio"],
+                    original_b64=report_data.get("original_b64"),
+                    gray_b64=report_data.get("gray_b64"),
+                    sobel_b64=report_data.get("sobel_b64"),
+                    redness_b64=report_data.get("redness_b64")
                 )
                 
                 flash("Wound diagnostic completed successfully!", "success")
@@ -266,11 +270,13 @@ def result(report_id):
     filename = report["filename"]
     base_name, ext = os.path.splitext(filename)
     
+    original_mime = "image/png" if ext.lower() == ".png" else "image/jpeg"
+    report_dict = dict(report)
     visuals = {
-        "original": f"uploads/{filename}",
-        "gray": f"processed/{base_name}_gray{ext}",
-        "sobel": f"processed/{base_name}_sobel{ext}",
-        "redness": f"processed/{base_name}_redness{ext}"
+        "original": f"data:{original_mime};base64,{report_dict['original_b64']}" if report_dict.get("original_b64") else url_for('serve_uploads', filename=filename),
+        "gray": f"data:image/png;base64,{report_dict['gray_b64']}" if report_dict.get("gray_b64") else url_for('serve_processed', filename=f"{base_name}_gray{ext}"),
+        "sobel": f"data:image/png;base64,{report_dict['sobel_b64']}" if report_dict.get("sobel_b64") else url_for('serve_processed', filename=f"{base_name}_sobel{ext}"),
+        "redness": f"data:image/png;base64,{report_dict['redness_b64']}" if report_dict.get("redness_b64") else url_for('serve_processed', filename=f"{base_name}_redness{ext}")
     }
     
     return render_template(
@@ -309,9 +315,9 @@ def delete_history_report(report_id):
     
     files_to_delete = [
         os.path.join(app.config["UPLOAD_FOLDER"], filename),
-        os.path.join(app.root_path, "static", "processed", f"{base_name}_gray{ext}"),
-        os.path.join(app.root_path, "static", "processed", f"{base_name}_sobel{ext}"),
-        os.path.join(app.root_path, "static", "processed", f"{base_name}_redness{ext}")
+        os.path.join(PROCESSED_FOLDER, f"{base_name}_gray{ext}"),
+        os.path.join(PROCESSED_FOLDER, f"{base_name}_sobel{ext}"),
+        os.path.join(PROCESSED_FOLDER, f"{base_name}_redness{ext}")
     ]
     
     for f in files_to_delete:
@@ -373,13 +379,29 @@ def preprocess_preview():
             # Trigger Sobel preprocessing exclusively
             sobel_res = process_sobel_edges(save_path, sobel_path)
             
+            # Read and encode to base64
+            import base64
+            sobel_b64 = ""
+            if os.path.exists(sobel_path):
+                with open(sobel_path, "rb") as f:
+                    sobel_b64 = base64.b64encode(f.read()).decode("utf-8")
+                # Clean up processed file from disk to keep storage tidy
+                try:
+                    os.remove(sobel_path)
+                except Exception:
+                    pass
+            
             # Clean up original temp file immediately to save disk
             if os.path.exists(save_path):
-                os.remove(save_path)
+                try:
+                    os.remove(save_path)
+                except Exception:
+                    pass
                 
+            preview_url = f"data:image/png;base64,{sobel_b64}" if sobel_b64 else ""
             return jsonify({
                 "success": True,
-                "preview_url": url_for("static", filename=f"processed/{sobel_name}"),
+                "preview_url": preview_url,
                 "c_mode": sobel_res["mode"],
                 "duration_ms": sobel_res["time_ms"]
             })
@@ -390,4 +412,4 @@ def preprocess_preview():
 
 if __name__ == "__main__":
     print("[Server] Starting Wound AI Flask Application...")
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

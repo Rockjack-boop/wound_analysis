@@ -16,6 +16,7 @@ c_modules/*.obj
 c_modules/*.o
 c_modules/*.lib
 c_modules/*.exp
+c_modules/*.pdb
 
 # Local Patient Database
 database/*.db

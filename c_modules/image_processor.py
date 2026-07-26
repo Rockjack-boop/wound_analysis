@@ -158,9 +158,10 @@ def get_library_status():
 def process_grayscale(image_path, save_path):
     """Converts image to grayscale."""
     t0 = time.perf_counter()
-    img = Image.open(image_path).convert("RGB")
-    width, height = img.size
-    img_array = np.array(img)
+    with Image.open(image_path) as img:
+        img_rgb = img.convert("RGB")
+        width, height = img_rgb.size
+        img_array = np.array(img_rgb)
     channels = img_array.shape[2]
     
     mode = "C-Library"
@@ -197,9 +198,10 @@ def process_sobel_edges(image_path, save_path):
     t0 = time.perf_counter()
     
     # 1. Convert to grayscale first (as Sobel requires a grayscale base)
-    img = Image.open(image_path).convert("RGB")
-    width, height = img.size
-    img_array = np.array(img)
+    with Image.open(image_path) as img:
+        img_rgb = img.convert("RGB")
+        width, height = img_rgb.size
+        img_array = np.array(img_rgb)
     channels = img_array.shape[2]
     
     # Ensure source is grayscale
@@ -239,9 +241,10 @@ def process_sobel_edges(image_path, save_path):
 def process_redness_detection(image_path, save_path):
     """Isolates inflamed wound tissues and outputs red index counts."""
     t0 = time.perf_counter()
-    img = Image.open(image_path).convert("RGB")
-    width, height = img.size
-    img_array = np.array(img)
+    with Image.open(image_path) as img:
+        img_rgb = img.convert("RGB")
+        width, height = img_rgb.size
+        img_array = np.array(img_rgb)
     channels = img_array.shape[2]
     
     mode = "C-Library"

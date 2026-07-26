@@ -2,17 +2,30 @@
 
 {% block title %}AI Wound Diagnostic Report - WoundAI{% endblock %}
 
+{% block head %}
+<style>
+    /* Clean themes for dynamic severity and infection highlights */
+    .infection-text-high { color: var(--color-critical) !important; }
+    .infection-text-medium { color: var(--color-warning) !important; }
+    .infection-text-low { color: var(--color-success) !important; }
+
+    .gauge-fill-high { background: var(--color-critical) !important; box-shadow: 0 0 10px rgba(255, 75, 85, 0.4) !important; }
+    .gauge-fill-medium { background: var(--color-warning) !important; box-shadow: 0 0 10px rgba(255, 150, 0, 0.3) !important; }
+    .gauge-fill-low { background: var(--color-success) !important; box-shadow: 0 0 10px rgba(75, 255, 145, 0.3) !important; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <div class="result-layout">
     
     <!-- Header Banner -->
-    <div class="glass-card" style="padding: 1.8rem 2.2rem;">
+    <div class="glass-card result-header-card">
         <div class="result-header-panel">
             <div>
-                <span style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">AI Diagnostic Report</span>
-                <h1 style="font-size: 2.2rem; margin-top: 0.2rem; color: var(--primary);">
-                    Incision: <span style="color: #fff;">{{ report.wound_type }}</span>
+                <span class="result-header-badge-label">AI Diagnostic Report</span>
+                <h1 class="result-header-title">
+                    Incision: <span class="result-header-type">{{ report.wound_type }}</span>
                 </h1>
             </div>
             
@@ -43,30 +56,42 @@
     
     <!-- Statistical Metrics Grid -->
     <div class="diagnostic-gauges-grid">
-        <div class="gauge-card {% if report.major_minor == 'Major' %}critical-gauge{% endif %}">
+        <div class="gauge-card {% if report.major_minor == 'Major' %}critical-gauge{% endif %}" data-delay="100">
             <span class="label">Classification</span>
             <span class="value">{{ report.major_minor }}</span>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">Severity Index</p>
+            <div class="gauge-bar-outer">
+                <div class="gauge-progress-fill" data-value="{% if report.major_minor == 'Major' %}100%{% else %}30%{% endif %}"></div>
+            </div>
+            <p class="gauge-card-desc">Severity Index</p>
         </div>
         
-        <div class="gauge-card">
+        <div class="gauge-card" data-delay="250">
             <span class="label">Confidence Score</span>
-            <span class="value" style="color: var(--secondary);">{{ report.confidence }}%</span>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">AI Engine Certainty</p>
+            <span class="value text-secondary-color"><span class="counter-value" data-target="{{ report.confidence }}" data-percent="true">0%</span></span>
+            <div class="gauge-bar-outer">
+                <div class="gauge-progress-fill" data-value="{{ report.confidence }}%"></div>
+            </div>
+            <p class="gauge-card-desc">AI Engine Certainty</p>
         </div>
         
-        <div class="gauge-card">
+        <div class="gauge-card" data-delay="400">
             <span class="label">Infection Threat</span>
-            <span class="value" style="{% if report.infection_possibility == 'High' %}color: var(--color-critical);{% elif report.infection_possibility == 'Medium' %}color: var(--color-warning);{% else %}color: var(--color-success);{% endif %}">
+            <span class="value infection-text-{{ report.infection_possibility | lower }}">
                 {{ report.infection_possibility }}
             </span>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">Erythema Proximity</p>
+            <div class="gauge-bar-outer">
+                <div class="gauge-progress-fill gauge-fill-{{ report.infection_possibility | lower }}" data-value="{% if report.infection_possibility == 'High' %}90%{% elif report.infection_possibility == 'Medium' %}60%{% else %}25%{% endif %}"></div>
+            </div>
+            <p class="gauge-card-desc">Erythema Proximity</p>
         </div>
         
-        <div class="gauge-card">
+        <div class="gauge-card" data-delay="550">
             <span class="label">Inflammation Index</span>
-            <span class="value" style="color: var(--color-info);">{{ report.redness_ratio }}%</span>
-            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">{{ report.red_pixel_count }} Active Pixels</p>
+            <span class="value text-info-color"><span class="counter-value" data-target="{{ report.redness_ratio }}" data-percent="true" data-float="true">0.0%</span></span>
+            <div class="gauge-bar-outer">
+                <div class="gauge-progress-fill" data-value="{{ report.redness_ratio }}%"></div>
+            </div>
+            <p class="gauge-card-desc">{{ report.red_pixel_count }} Active Pixels</p>
         </div>
     </div>
     
@@ -79,7 +104,7 @@
                 Original Photo
             </h3>
             <div class="comparison-image-wrapper">
-                <img src="{{ url_for('static', filename=visuals.original) }}" alt="Original uploaded wound image">
+                <img src="{{ visuals.original }}" alt="Original uploaded wound image">
             </div>
         </div>
         
@@ -89,16 +114,17 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                 <span id="processedViewLabel">C-Sobel Gradient Map</span>
             </h3>
-            <div class="comparison-image-wrapper">
+            <div class="comparison-image-wrapper scanner-container">
                 <!-- Starts with Sobel edge map -->
-                <img id="processedDisplayImg" src="{{ url_for('static', filename=visuals.sobel) }}" alt="C Preprocessed wound visualization">
+                <img id="processedDisplayImg" src="{{ visuals.sobel }}" alt="C Preprocessed wound visualization">
+                <div class="scanner-line" id="processedScanner"></div>
             </div>
             
             <!-- Horizontal visual selector tab buttons -->
             <div class="visual-tabs">
-                <button class="visual-tab-btn" onclick="toggleView('gray', 'C-Grayscale Luminance', '{{ url_for('static', filename=visuals.gray) }}')">Grayscale</button>
-                <button class="visual-tab-btn active" id="defaultViewTab" onclick="toggleView('sobel', 'C-Sobel Gradient Map', '{{ url_for('static', filename=visuals.sobel) }}')">Sobel Edges</button>
-                <button class="visual-tab-btn" onclick="toggleView('redness', 'C-Redness Inflammation Map', '{{ url_for('static', filename=visuals.redness) }}')">Red Highlights</button>
+                <button class="visual-tab-btn" data-type="gray" data-label="C-Grayscale Luminance" data-src="{{ visuals.gray }}">Grayscale</button>
+                <button class="visual-tab-btn active" id="defaultViewTab" data-type="sobel" data-label="C-Sobel Gradient Map" data-src="{{ visuals.sobel }}">Sobel Edges</button>
+                <button class="visual-tab-btn" data-type="redness" data-label="C-Redness Inflammation Map" data-src="{{ visuals.redness }}">Red Highlights</button>
             </div>
         </div>
     </div>
@@ -109,30 +135,21 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
             Clinical Action Checklist & First Aid Guidance
         </h3>
-        <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+        <p class="treatment-plan-subtitle">
             Please execute the following medical hygiene checklist step-by-step. Toggle the checklist boxes as you accomplish them to stay organized.
         </p>
         
-        <ul class="treatment-checklist">
-            {% for bullet in first_aid_bullets %}
-                <li class="checklist-item">
-                    <input type="checkbox" class="checklist-checkbox" id="bullet-{{ loop.index }}">
-                    <div class="checklist-content">
-                        {{ bullet }}
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
+        <div class="treatment-checklist">{%- for bullet in first_aid_bullets -%}<div class="checklist-item"><input type="checkbox" class="checklist-checkbox" id="bullet-{{ loop.index }}" aria-label="Checklist Item {{ loop.index }}"><label class="checklist-content" for="bullet-{{ loop.index }}">{{ bullet }}</label></div>{%- endfor -%}</div>
     </div>
     
     <!-- Diagnostics Controls / Actions -->
-    <div style="display: flex; gap: 1.5rem; justify-content: flex-start; margin-bottom: 4rem;">
+    <div class="result-actions-container">
         <button class="btn btn-secondary" onclick="window.print()">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print Clinical Report
         </button>
         <a href="{{ url_for('history') }}" class="btn btn-secondary">View Patient Log history</a>
-        <a href="{{ url_for('upload') }}" class="btn btn-primary" style="color: #04080f;">Analyze New Wound</a>
+        <a href="{{ url_for('upload') }}" class="btn btn-primary btn-dark-text">Analyze New Wound</a>
     </div>
     
     <!-- Diagnostic Metadata Footer -->
@@ -146,17 +163,38 @@
 
 {% block scripts %}
 <script>
-    function toggleView(type, label, srcUrl) {
+    function toggleView(type, label, srcUrl, btnElement) {
         // Toggle Active Tab Style
         const btns = document.querySelectorAll('.visual-tab-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         
-        // Find corresponding event target
-        event.target.classList.add('active');
+        if (btnElement) {
+            btnElement.classList.add('active');
+        }
         
         // Update Display Elements
         document.getElementById('processedViewLabel').innerText = label;
         document.getElementById('processedDisplayImg').src = srcUrl;
+
+        // Restart laser scanning animation to give a fresh convolving feedback
+        const scanner = document.getElementById('processedScanner');
+        if (scanner) {
+            scanner.style.animation = 'none';
+            scanner.offsetHeight; // trigger DOM reflow
+            scanner.style.animation = 'laserSweep 2.2s infinite ease-in-out';
+        }
     }
+
+    // Set up click event listeners on visual tab buttons to resolve inline quote concerns
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll('.visual-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const label = this.getAttribute('data-label');
+                const src = this.getAttribute('data-src');
+                toggleView(type, label, src, this);
+            });
+        });
+    });
 </script>
 {% endblock %}

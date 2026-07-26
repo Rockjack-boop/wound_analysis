@@ -16,11 +16,11 @@ def compile_c_module():
     # Define shared library names depending on the OS
     system = platform.system().lower()
     if system == "windows":
-        lib_name = "image_processor.dll"
+        lib_name = "libimage_processor.dll"
     elif system == "darwin":
-        lib_name = "image_processor.dylib"
+        lib_name = "libimage_processor.dylib"
     else:
-        lib_name = "image_processor.so"
+        lib_name = "libimage_processor.so"
         
     output_path = os.path.join(c_modules_dir, lib_name)
     
@@ -53,15 +53,19 @@ def compile_c_module():
                 compiled = True
             elif cl_path:
                 print("[C Module] Compiling with MSVC cl...")
-                # MSVC syntax for dll: cl /LD /O2 image_processor.c /Fe:image_processor.dll
+                # MSVC syntax for dll: cl /LD /O2 image_processor.c /Fe:libimage_processor.dll
                 cmd = ["cl", "/LD", "/O2", source_path, f"/Fe:{output_path}"]
                 subprocess.check_call(cmd)
                 compiled = True
-                # Clean up temporary build files created by MSVC (.obj, .lib, .exp)
-                for ext in [".obj", ".lib", ".exp"]:
-                    temp_file = os.path.join(c_modules_dir, "image_processor" + ext)
-                    if os.path.exists(temp_file):
-                        os.remove(temp_file)
+                # Clean up temporary build files created by MSVC (.obj, .lib, .exp, .pdb)
+                for name in ["libimage_processor", "image_processor"]:
+                    for ext in [".obj", ".lib", ".exp", ".pdb"]:
+                        temp_file = os.path.join(c_modules_dir, name + ext)
+                        if os.path.exists(temp_file):
+                            try:
+                                os.remove(temp_file)
+                            except Exception:
+                                pass
             else:
                 # Try searching in common MSYS64 or MinGW locations
                 fallback_compilers = [

@@ -2,46 +2,388 @@
 
 {% block title %}Patient Registration - WoundAI{% endblock %}
 
+{% block head %}
+<style>
+    /* Page background relative layout for Canvas */
+    body {
+        position: relative;
+    }
+    
+    /* Managed globally in base.html */
+
+    /* Auth Wrapper Container */
+    .auth-wrapper {
+        position: relative;
+        z-index: 10;
+        max-width: 480px;
+        margin: 4.5rem auto;
+        padding: 0 1rem;
+    }
+
+    /* Orbiting Gradient Glow Border Card Container */
+    .glow-card-container {
+        position: relative;
+        border-radius: var(--radius-lg);
+        padding: 2px; /* creates gradient border */
+        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary) 100%);
+        background-size: 300% 300%;
+        animation: gradientBorder 5s ease infinite, cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        box-shadow: 0 10px 40px -10px rgba(0, 242, 254, 0.25), 0 20px 80px -20px rgba(111, 76, 255, 0.15);
+    }
+    
+    @keyframes gradientBorder {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    @keyframes cardEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    
+    /* Glass Card Custom Styling */
+    .glow-card-container .glass-card {
+        background: rgba(8, 14, 28, 0.85);
+        -webkit-backdrop-filter: blur(25px);
+        backdrop-filter: blur(25px);
+        border: none;
+        margin: 0;
+        border-radius: calc(var(--radius-lg) - 2px);
+        box-shadow: none;
+        overflow: visible;
+        padding: 2.5rem 2.2rem;
+    }
+    
+    .glow-card-container .glass-card::before {
+        display: none; /* Hide default top stripe */
+    }
+
+    /* Pulsing Header Icon */
+    .login-pulse-icon {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .pulse-badge {
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: rgba(0, 242, 254, 0.08);
+        border: 1px solid var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        box-shadow: 0 0 15px var(--primary-glow);
+        animation: pulseIcon 2.5s infinite alternate ease-in-out;
+    }
+    
+    @keyframes pulseIcon {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 10px var(--primary-glow);
+            border-color: var(--primary);
+        }
+        100% {
+            transform: scale(1.08);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.6), 0 0 10px rgba(111, 76, 255, 0.3);
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+    }
+    
+    /* Futuristic Label/Input Design */
+    .form-group-animated {
+        position: relative;
+        margin-bottom: 1.8rem;
+    }
+    
+    .form-group-animated .form-control {
+        width: 100%;
+        background: rgba(13, 23, 42, 0.55);
+        border: 1px solid var(--border-color);
+        padding: 0.95rem 1rem 0.95rem 2.8rem;
+        color: var(--text-primary);
+        border-radius: var(--radius-md);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .form-group-animated select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='hsl(215, 12%25, 70%25)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.2rem;
+    }
+    
+    .form-group-animated .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 15px rgba(0, 242, 254, 0.2), inset 0 0 10px rgba(0, 242, 254, 0.05);
+        background: rgba(13, 23, 42, 0.85);
+    }
+    
+    /* Icons inside inputs */
+    .form-group-animated .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        transition: color 0.3s ease;
+        pointer-events: none;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-group-animated .form-control:focus ~ .input-icon {
+        color: var(--primary);
+        filter: drop-shadow(0 0 5px var(--primary-glow));
+    }
+    
+    /* Floating Labels */
+    .form-group-animated .floating-label {
+        position: absolute;
+        left: 2.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: none;
+    }
+    
+    .form-group-animated .form-control:focus ~ .floating-label,
+    .form-group-animated .form-control:not(:placeholder-shown) ~ .floating-label,
+    .form-group-animated .form-control.has-value ~ .floating-label,
+    .form-group-animated select.form-control:valid ~ .floating-label {
+        top: -0.45rem;
+        left: 0.9rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--primary);
+        background: #080e1c;
+        padding: 0 0.4rem;
+        border-radius: 4px;
+    }
+    
+    /* Password Toggle Icon */
+    .password-toggle {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: color 0.3s ease;
+        background: none;
+        border: none;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        z-index: 5;
+    }
+    
+    .password-toggle:hover {
+        color: var(--primary);
+    }
+    
+    /* Submit button hover effect */
+    .btn-submit-animated {
+        position: relative;
+        overflow: hidden;
+        width: 100%;
+        padding: 0.75rem 1.4rem;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border-radius: var(--radius-md);
+        box-shadow: 0 4px 15px rgba(0, 242, 254, 0.25);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit-animated::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+        transition: 0.6s ease;
+    }
+    
+    .btn-submit-animated:hover {
+        box-shadow: 0 6px 22px rgba(0, 242, 254, 0.4);
+    }
+
+    .btn-submit-animated:hover::before {
+        left: 100%;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Managed globally in base.html -->
 
 <div class="auth-wrapper">
-    <div class="glass-card">
-        <div class="auth-header">
-            <h2>Patient Registration</h2>
-            <p>Initialize a secure, encrypted profile for automated diagnostic tracking.</p>
-        </div>
-        
-        <form action="{{ url_for('register') }}" method="POST">
-            <div class="form-group">
-                <label class="form-label" for="username">Username</label>
-                <input type="text" class="form-control" id="username" name="username" placeholder="Choose a username" required autocomplete="username">
+    <div class="glow-card-container">
+        <div class="glass-card">
+            <!-- Pulsing Header Badge -->
+            <div class="login-pulse-icon">
+                <div class="pulse-badge">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <line x1="19" y1="8" x2="19" y2="14"/>
+                        <line x1="22" y1="11" x2="16" y2="11"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="auth-header">
+                <h2>Clinical Registration</h2>
+                <p>Initialize a secure, encrypted profile for automated diagnostic tracking.</p>
             </div>
             
-            <div class="form-group">
-                <label class="form-label" for="email">Email Address</label>
-                <input type="email" class="form-control" id="email" name="email" placeholder="name@domain.com" required autocomplete="email">
-            </div>
+            <form action="{{ url_for('register') }}" method="POST" id="registerForm">
+                <!-- Username Animated Input -->
+                <div class="form-group-animated">
+                    <input type="text" class="form-control" id="username" name="username" placeholder=" " required autocomplete="username">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <label class="floating-label" for="username">Username</label>
+                </div>
+
+                <!-- Email Animated Input -->
+                <div class="form-group-animated">
+                    <input type="email" class="form-control" id="email" name="email" placeholder=" " required autocomplete="email">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                            <polyline points="22,6 12,13 2,6"/>
+                        </svg>
+                    </div>
+                    <label class="floating-label" for="email">Email Address</label>
+                </div>
+                
+                <!-- Password Animated Input -->
+                <div class="form-group-animated">
+                    <input type="password" class="form-control" id="password" name="password" placeholder=" " required autocomplete="new-password">
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <label class="floating-label" for="password">Password</label>
+                    <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle Password Visibility">
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Clinical Role Type Animated Selection -->
+                <div class="form-group-animated mb-lg">
+                    <select class="form-control form-select" id="role" name="role" required>
+                        <option value="" disabled selected hidden></option>
+                        <option value="user">Patient (Standard Profiling)</option>
+                        <option value="admin">Clinician / Administrator</option>
+                    </select>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <label class="floating-label" for="role">Clinical Role Type</label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-submit-animated">
+                    <span>Create Profiler Account</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </form>
             
-            <div class="form-group">
-                <label class="form-label" for="password">Password</label>
-                <input type="password" class="form-control" id="password" name="password" placeholder="At least 6 characters" required autocomplete="new-password">
+            <div class="auth-footer">
+                Already registered? <a href="{{ url_for('login') }}">Access clinical login</a>
             </div>
-            
-            <div class="form-group" style="margin-bottom: 2rem;">
-                <label class="form-label" for="role">Clinical Role Type</label>
-                <select class="form-control form-select" id="role" name="role">
-                    <option value="user" selected>Patient (Standard Profiling)</option>
-                    <option value="admin">Clinician / Administrator</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Profiler Account</button>
-        </form>
-        
-        <div class="auth-footer">
-            Already registered? <a href="{{ url_for('login') }}">Access clinical login</a>
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script>
+    // ----------------------------------------------------
+    // Password Visibility Toggle Animation
+    // ----------------------------------------------------
+    const passwordInput = document.getElementById('password');
+    const passwordToggle = document.getElementById('passwordToggle');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    passwordToggle.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        
+        // Update SVG inside toggle
+        if (isPassword) {
+            eyeIcon.innerHTML = `
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+            `;
+            passwordToggle.style.color = 'var(--primary)';
+        } else {
+            eyeIcon.innerHTML = `
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            `;
+            passwordToggle.style.color = 'var(--text-muted)';
+        }
+    });
+
+    // Floating label value detection fallback
+    const formInputs = document.querySelectorAll('.form-group-animated .form-control');
+    formInputs.forEach(input => {
+        const checkValue = () => {
+            if (input.value && input.value.trim() !== "") {
+                input.classList.add('has-value');
+            } else {
+                input.classList.remove('has-value');
+            }
+        };
+        input.addEventListener('input', checkValue);
+        input.addEventListener('change', checkValue);
+        input.addEventListener('blur', checkValue);
+        input.addEventListener('focus', checkValue);
+        
+        // Initial check
+        checkValue();
+        
+        // Timeouts to catch browser autocompletes
+        setTimeout(checkValue, 100);
+        setTimeout(checkValue, 500);
+    });
+
+    // Particles managed globally
+</script>
 {% endblock %}

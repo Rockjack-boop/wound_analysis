@@ -2,90 +2,354 @@
 
 {% block title %}Administrator Dashboard - WoundAI{% endblock %}
 
+{% block head %}
+<style>
+    /* Page background relative layout for Canvas */
+    body {
+        position: relative;
+    }
+    
+    /* Managed globally in base.html */
+
+    /* Dashboard card entrance animations */
+    @keyframes cardEntrance {
+        from {
+            opacity: 0;
+            transform: translateY(25px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .animate-entrance {
+        opacity: 0;
+        animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Single-column full-width layout for telemetry */
+    .compiler-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.8rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .compiler-card, .telemetry-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 1.8rem;
+        border-radius: var(--radius-lg);
+        margin-bottom: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    
+    .compiler-card:hover, .telemetry-card:hover {
+        border-color: hsla(180, 90%, 45%, 0.25);
+    }
+
+    .telemetry-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--secondary), var(--primary));
+        opacity: 0.7;
+    }
+
+    .telemetry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+    }
+
+    .pulse-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--color-success);
+        background: rgba(145, 80, 45, 0.08);
+        border: 1px solid rgba(145, 80, 45, 0.25);
+        padding: 0.25rem 0.65rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .pulse-indicator::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        background-color: var(--color-success);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--color-success);
+        animation: pulseIndicatorAnim 1s infinite alternate;
+    }
+
+    @keyframes pulseIndicatorAnim {
+        0% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+
+    .telemetry-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 1.2rem;
+    }
+
+    #canvas-telemetry {
+        background: #020408;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        display: block;
+        width: 100%;
+    }
+
+    .metrics-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
+
+    .metric-gauge {
+        display: grid;
+        grid-template-columns: 120px 1fr 60px;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+    }
+
+    .metric-label {
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .metric-bar-container {
+        background: rgba(255, 255, 255, 0.04);
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.02);
+    }
+
+    .metric-bar {
+        height: 100%;
+        border-radius: 3px;
+        width: 0%;
+        transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .db-bar { background: var(--secondary); box-shadow: 0 0 8px var(--secondary-glow); }
+    .c-bar { background: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+    .mem-bar { background: var(--color-warning); box-shadow: 0 0 8px rgba(255, 150, 0, 0.3); }
+
+    .metric-value {
+        font-family: monospace;
+        color: var(--text-primary);
+        font-weight: 600;
+        text-align: right;
+    }
+
+    /* Terminal console upgrades */
+    .compiler-terminal {
+        position: relative;
+        background: #020408;
+        border: 1px solid var(--border-color);
+        padding: 1.2rem;
+        border-radius: var(--radius-md);
+        font-family: monospace;
+        font-size: 0.85rem;
+        color: #4af626;
+        height: 220px;
+        max-height: 220px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+        text-shadow: 0 0 3px rgba(74, 246, 38, 0.45);
+    }
+
+    .compiler-terminal-scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0) 0%,
+            rgba(74, 246, 38, 0.05) 10%,
+            rgba(0, 0, 0, 0) 20%
+        );
+        animation: scanlineAnim 5s linear infinite;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .compiler-terminal::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%);
+        z-index: 4;
+        background-size: 100% 3px;
+        pointer-events: none;
+    }
+
+    @keyframes scanlineAnim {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+    }
+
+    .terminal-cursor {
+        display: inline-block;
+        animation: cursorBlink 0.9s infinite alternate;
+        color: #4af626;
+    }
+
+    @keyframes cursorBlink {
+        0% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    /* Staggered Row Animation for database listings */
+    .admin-table tbody tr {
+        opacity: 0;
+        transform: translateY(12px);
+        animation: rowIntro 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes rowIntro {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .admin-table tbody tr:nth-child(1) { animation-delay: 0.05s; }
+    .admin-table tbody tr:nth-child(2) { animation-delay: 0.1s; }
+    .admin-table tbody tr:nth-child(3) { animation-delay: 0.15s; }
+    .admin-table tbody tr:nth-child(4) { animation-delay: 0.2s; }
+    .admin-table tbody tr:nth-child(5) { animation-delay: 0.25s; }
+    .admin-table tbody tr:nth-child(6) { animation-delay: 0.3s; }
+    .admin-table tbody tr:nth-child(7) { animation-delay: 0.35s; }
+    .admin-table tbody tr:nth-child(8) { animation-delay: 0.4s; }
+    .admin-table tbody tr:nth-child(9) { animation-delay: 0.45s; }
+    .admin-table tbody tr:nth-child(10) { animation-delay: 0.5s; }
+
+    @media (max-width: 992px) {
+        .compiler-row {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
+<!-- Managed globally in base.html -->
 
 <!-- Admin Header -->
-<div style="margin-bottom: 2.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
-    <h1 style="font-size: 2.2rem; display: flex; align-items: center; gap: 0.75rem;">
+<div class="admin-header-container">
+    <h1 class="admin-header-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--secondary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
         <span>Analytical Administrator Console</span>
     </h1>
-    <p style="color: var(--text-secondary); margin-top: 0.3rem;">Real-time backend telemetries, database logs, and compiled C-binary shared library diagnostics.</p>
+    <p class="admin-header-subtitle">Real-time backend telemetries, database logs, and compiled C-binary shared library diagnostics.</p>
 </div>
 
 <!-- Grid of Key Analytics Summary -->
 <div class="admin-grid-top">
-    <div class="glass-card" style="padding: 1.5rem; text-align: center;">
-        <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Total Registrations</span>
-        <h2 style="font-size: 2.5rem; color: var(--primary); margin-top: 0.4rem;">{{ stats.total_users }}</h2>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">Registered Patients & Admins</p>
-    </div>
-    
-    <div class="glass-card" style="padding: 1.5rem; text-align: center;">
-        <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Wound Profiles Run</span>
-        <h2 style="font-size: 2.5rem; color: var(--secondary); margin-top: 0.4rem;">{{ stats.total_reports }}</h2>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">SQLite Report Records Saved</p>
-    </div>
-    
-    <div class="glass-card" style="padding: 1.5rem; text-align: center;">
-        <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Major Severity Ratio</span>
-        <h2 style="font-size: 2.5rem; color: var(--color-critical); margin-top: 0.4rem;">
-            {% if stats.total_reports > 0 %}
-                {{ ((stats.major_count / stats.total_reports) * 100) | round(1) }}%
-            {% else %}
-                0.0%
-            {% endif %}
+    <div class="glass-card animate-entrance admin-stat-card">
+        <span class="stat-card-label">Total Registrations</span>
+        <h2 class="stat-card-value primary">
+            <span class="counter-value" data-target="{{ stats.total_users }}">0</span>
         </h2>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">{{ stats.major_count }} Major Wounds</p>
+        <p class="stat-card-desc">Registered Patients & Admins</p>
     </div>
     
-    <div class="glass-card" style="padding: 1.5rem; text-align: center;">
-        <span style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase;">Mean AI Certainty</span>
-        <h2 style="font-size: 2.5rem; color: var(--color-success); margin-top: 0.4rem;">{{ stats.avg_confidence }}%</h2>
-        <p style="font-size: 0.75rem; color: var(--text-muted);">Confidence Score Average</p>
+    <div class="glass-card animate-entrance admin-stat-card">
+        <span class="stat-card-label">Wound Profiles Run</span>
+        <h2 class="stat-card-value secondary">
+            <span class="counter-value" data-target="{{ stats.total_reports }}">0</span>
+        </h2>
+        <p class="stat-card-desc">SQLite Report Records Saved</p>
+    </div>
+    
+    <div class="glass-card animate-entrance admin-stat-card">
+        <span class="stat-card-label">Major Severity Ratio</span>
+        <h2 class="stat-card-value critical">
+            <span class="counter-value" data-target="{% if stats.total_reports > 0 %}{{ ((stats.major_count / stats.total_reports) * 100) | round(1) }}{% else %}0.0{% endif %}" data-percent="true" data-float="true">0.0%</span>
+        </h2>
+        <p class="stat-card-desc">{{ stats.major_count }} Major Wound{% if stats.major_count != 1 %}s{% endif %}</p>
+    </div>
+    
+    <div class="glass-card animate-entrance admin-stat-card">
+        <span class="stat-card-label">Mean AI Certainty</span>
+        <h2 class="stat-card-value success">
+            <span class="counter-value" data-target="{{ stats.avg_confidence }}" data-percent="true">0%</span>
+        </h2>
+        <p class="stat-card-desc">Confidence Score Average</p>
     </div>
 </div>
 
-<!-- Compiler Shared Library Diagnoser console -->
-<div class="compiler-card">
-    <div class="compiler-header">
-        <h3 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-            <span>Compiled C-Binary Core Status</span>
-        </h3>
+<!-- Compiler Shared Library Diagnoser row -->
+<div class="compiler-row">
+    <!-- Right Column: Live Telemetries visualizer -->
+    <div class="telemetry-card animate-entrance">
+        <div class="telemetry-header">
+            <h3>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                <span>Live System Telemetries</span>
+            </h3>
+            <span class="pulse-indicator">ONLINE</span>
+        </div>
         
-        <span class="pill-badge {% if c_status.compiled %}low{% else %}critical{% endif %}" style="padding: 0.4rem 1rem;">
-            Status: {{ c_status.mode }}
-        </span>
-    </div>
-    
-    <div class="compiler-terminal {% if not c_status.compiled %}error{% endif %}">
-        {% if c_status.compiled %}
-[C Module Loader] Executable directory detected: c_modules/
-[C Module Loader] Found compiled library: image_processor.dll
-[C Module Loader] ctypes Binding initialized.
-[C Module Loader] Exported functions bind success:
-    - void convert_to_grayscale(unsigned char*, int, int, int)
-    - void detect_sobel_edges(const unsigned char*, unsigned char*, int, int, int)
-    - int detect_redness_pixels(const unsigned char*, unsigned char*, int, int, int)
-[System Monitor] Dynamic preprocessor channels binding active. Ready.
-        {% else %}
-[C Module Loader] Failed to locate pre-built image_processor.dll in c_modules/
-[C Module Compiler] Invoking cross-platform compile pipeline...
-[C Module Compiler] Compiler scan on host:
-    - gcc (MinGW): NOT FOUND
-    - clang (LLVM): NOT FOUND
-    - cl (MSVC Build Tools): NOT FOUND
-[C Module Compiler] WARNING: No compatible C compiler discovered on the target environment.
-[C Module Compiler] Fallback initiated: Loading optimized NumPy-accelerated image pipeline.
-[C Module Loader] Fallback status: NumPy engine successfully mapped and bound to all preprocessor callbacks.
-[System Monitor] Fallback mode active. 100% end-to-end functionality guaranteed.
-        {% endif %}
+        <div class="telemetry-body">
+            <canvas id="canvas-telemetry"></canvas>
+            
+            <div class="metrics-grid">
+                <div class="metric-gauge">
+                    <span class="metric-label">DB Query Latency</span>
+                    <div class="metric-bar-container">
+                        <div class="metric-bar db-bar" id="dbBar"></div>
+                    </div>
+                    <span class="metric-value" id="dbVal">0ms</span>
+                </div>
+                <div class="metric-gauge">
+                    <span class="metric-label">C-binary Throughput</span>
+                    <div class="metric-bar-container">
+                        <div class="metric-bar c-bar" id="cBar"></div>
+                    </div>
+                    <span class="metric-value" id="cVal">0.0 GB/s</span>
+                </div>
+                <div class="metric-gauge">
+                    <span class="metric-label">Memory Utilization</span>
+                    <div class="metric-bar-container">
+                        <div class="metric-bar mem-bar" id="memBar"></div>
+                    </div>
+                    <span class="metric-value" id="memVal">0%</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Admin database lists -->
-<div class="admin-table-container">
+<div class="admin-table-container animate-entrance users-table-container">
     <h3>Registered Users Database Table</h3>
     <table class="admin-table">
         <thead>
@@ -115,7 +379,7 @@
     </table>
 </div>
 
-<div class="admin-table-container">
+<div class="admin-table-container animate-entrance reports-table-container">
     <h3>Complete Patient Diagnostic History Logs</h3>
     <table class="admin-table">
         <thead>
@@ -151,12 +415,12 @@
                     <td><strong>{{ r.confidence }}%</strong></td>
                     <td>{{ r.created_at }}</td>
                     <td>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <a href="{{ url_for('result', report_id=r.id) }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: var(--radius-sm);">
+                        <div class="actions-flex">
+                            <a href="{{ url_for('result', report_id=r.id) }}" class="btn btn-secondary btn-sm-admin">
                                 View Report
                             </a>
                             <form action="{{ url_for('delete_history_report', report_id=r.id) }}" method="POST" onsubmit="return confirm('Permanently delete report WND-{{ r.id }}?')">
-                                <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.75rem; border-radius: var(--radius-sm); border: none;">
+                                <button type="submit" class="btn btn-danger btn-sm-admin btn-no-border">
                                     Delete
                                 </button>
                             </form>
@@ -166,11 +430,191 @@
             {% endfor %}
             {% if not reports %}
                 <tr>
-                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;">No diagnostics reports recorded in the database yet.</td>
+                    <td colspan="9" class="table-empty-message">No diagnostics reports recorded in the database yet.</td>
                 </tr>
             {% endif %}
         </tbody>
     </table>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ----------------------------------------------------
+    // Incremental Stats Counters Animation
+    // ----------------------------------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+        const counters = document.querySelectorAll(".counter-value");
+        counters.forEach(counter => {
+            const target = +counter.getAttribute("data-target");
+            const isPercent = counter.getAttribute("data-percent") === "true";
+            const isFloat = counter.getAttribute("data-float") === "true";
+            const duration = 1200; // ms animation length
+            const stepTime = 15; // frequency of frames
+            const steps = duration / stepTime;
+            const increment = target / steps;
+            
+            let current = 0;
+            let stepCount = 0;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                stepCount++;
+                if (stepCount >= steps) {
+                    clearInterval(timer);
+                    counter.innerText = isFloat ? target.toFixed(1) + (isPercent ? "%" : "") : Math.round(target) + (isPercent ? "%" : "");
+                } else {
+                    counter.innerText = isFloat ? current.toFixed(1) + (isPercent ? "%" : "") : Math.round(current) + (isPercent ? "%" : "");
+                }
+            }, stepTime);
+        });
+    });
+
+    // ----------------------------------------------------
+    // Live Telemetry ECG & System Load Simulator
+    // ----------------------------------------------------
+    const canvas = document.getElementById("canvas-telemetry");
+    const ctx = canvas.getContext("2d");
+
+    let x = 0;
+    let points = [];
+    const maxPoints = 180;
+    let primaryColor = "#00f2fe";
+
+    function resizeCanvas() {
+        if (canvas.parentElement) {
+            const width = canvas.parentElement.clientWidth - 36;
+            canvas.width = width > 0 ? width : 360;
+            canvas.height = 110;
+        }
+        primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || "#00f2fe";
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    function getHeartbeatY(x) {
+        const cy = canvas.height / 2;
+        const period = 100; // Heartbeat cycle interval
+        const phase = x % period;
+        
+        if (phase > 25 && phase < 30) {
+            // P Wave (Pre-atrial contraction)
+            return cy - 4 * Math.sin((phase - 25) * Math.PI / 5);
+        }
+        if (phase >= 34 && phase < 37) {
+            // Q Dip
+            return cy + 6 * ((phase - 34) / 3);
+        }
+        if (phase >= 37 && phase < 41) {
+            // R Peak (Ventricular contraction)
+            return cy - 32 * Math.sin((phase - 37) * Math.PI / 4);
+        }
+        if (phase >= 41 && phase < 44) {
+            // S Dip
+            return cy + 10 * Math.sin((phase - 41) * Math.PI / 3);
+        }
+        if (phase >= 52 && phase < 62) {
+            // T Wave (Ventricular repolarization)
+            return cy - 6 * Math.sin((phase - 52) * Math.PI / 10);
+        }
+        return cy; // Baseline
+    }
+
+    function drawTelemetry() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw grid lines
+        ctx.strokeStyle = "rgba(0, 242, 254, 0.03)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < canvas.width; i += 20) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, canvas.height);
+            ctx.stroke();
+        }
+        for (let j = 0; j < canvas.height; j += 20) {
+            ctx.beginPath();
+            ctx.moveTo(0, j);
+            ctx.lineTo(canvas.width, j);
+            ctx.stroke();
+        }
+        
+        // Update points
+        points.push(getHeartbeatY(x));
+        if (points.length > maxPoints) {
+            points.shift();
+        }
+        
+        // Draw ECG trace
+        ctx.strokeStyle = primaryColor;
+        ctx.lineWidth = 2;
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = "rgba(0, 242, 254, 0.6)";
+        
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+            const px = (i / maxPoints) * canvas.width;
+            const py = points[i];
+            if (i === 0) {
+                ctx.moveTo(px, py);
+            } else {
+                ctx.lineTo(px, py);
+            }
+        }
+        ctx.stroke();
+        
+        // Reset shadows
+        ctx.shadowBlur = 0;
+        
+        x += 1.3;
+        requestAnimationFrame(drawTelemetry);
+    }
+
+    // Initialize telemetry animations
+    drawTelemetry();
+
+    // ----------------------------------------------------
+    // Simulated system gauges dynamics
+    // ----------------------------------------------------
+    const dbBar = document.getElementById("dbBar");
+    const cBar = document.getElementById("cBar");
+    const memBar = document.getElementById("memBar");
+    
+    const dbVal = document.getElementById("dbVal");
+    const cVal = document.getElementById("cVal");
+    const memVal = document.getElementById("memVal");
+
+    // Check if C core compilation status is enabled
+    const cCoreCompiled = "{{ c_status.compiled }}" === "True";
+
+    function updateSimulation() {
+        // DB Latency: fluctuates between 8ms and 15ms
+        const dbLatency = Math.floor(Math.random() * 8) + 8;
+        const dbPct = (dbLatency / 50) * 100; // normalized to 50ms max scale
+        dbBar.style.width = dbPct + "%";
+        dbVal.innerText = dbLatency + "ms";
+
+        // C-Throughput: compiles yield high values (80-92 GB/s), fallback yields 0.0
+        if (cCoreCompiled) {
+            const cThroughput = (85 + Math.random() * 6).toFixed(1);
+            cBar.style.width = (cThroughput / 120 * 100) + "%"; // scale against 120 max
+            cVal.innerText = cThroughput + " GB/s";
+        } else {
+            cBar.style.width = "0%";
+            cVal.innerText = "0.0 GB/s";
+        }
+
+        // Memory: fluctuates around 35-45%
+        const memUse = Math.floor(Math.random() * 10) + 36;
+        memBar.style.width = memUse + "%";
+        memVal.innerText = memUse + "%";
+    }
+
+    // Trigger initial values and continuous simulation cycles
+    setTimeout(updateSimulation, 200);
+    setInterval(updateSimulation, 2200);
+
+    // Particles managed globally
+</script>
 {% endblock %}

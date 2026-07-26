@@ -14,8 +14,9 @@ def get_db_connection():
     """
     Establishes and returns an SQLite database connection.
     Enables dictionary row factory for column-name keyed indexing.
+    Sets timeout to 30.0 seconds to prevent locks under concurrency.
     """
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -78,6 +79,13 @@ def init_db():
         except sqlite3.IntegrityError:
             pass
 
+    # Upgrade schema to support storing base64 inline images
+    for col in ["original_b64", "gray_b64", "sobel_b64", "redness_b64"]:
+        try:
+            cursor.execute(f"ALTER TABLE reports ADD COLUMN {col} TEXT")
+        except sqlite3.OperationalError:
+            pass
+
     conn.commit()
     conn.close()
     print("[Database] SQLite Tables verified and initialized.")
@@ -137,7 +145,8 @@ def get_all_users():
 
 def add_report(user_id, filename, wound_type, severity, major_minor, 
                infection_possibility, emergency_level, confidence, first_aid,
-               red_pixel_count=0, redness_ratio=0.0):
+               red_pixel_count=0, redness_ratio=0.0,
+               original_b64=None, gray_b64=None, sobel_b64=None, redness_b64=None):
     """Saves a wound detection report record to the database."""
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -145,11 +154,13 @@ def add_report(user_id, filename, wound_type, severity, major_minor,
         INSERT INTO reports (
             user_id, filename, wound_type, severity, major_minor,
             infection_possibility, emergency_level, confidence, first_aid,
-            red_pixel_count, redness_ratio
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            red_pixel_count, redness_ratio,
+            original_b64, gray_b64, sobel_b64, redness_b64
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (user_id, filename, wound_type, severity, major_minor,
           infection_possibility, emergency_level, confidence, first_aid,
-          red_pixel_count, redness_ratio))
+          red_pixel_count, redness_ratio,
+          original_b64, gray_b64, sobel_b64, redness_b64))
     report_id = cursor.lastrowid
     conn.commit()
     conn.close()

@@ -139,7 +139,7 @@ int detect_redness_pixels(const unsigned char* pixels, unsigned char* dst_filter
         // 1. Minimum Red component of 120 (prominent color)
         // 2. Red channel is at least 1.25x larger than Green channel
         // 3. Red channel is at least 1.25x larger than Blue channel
-        if (r > 120 && r > (unsigned char)(g * 1.25f) && r > (unsigned char)(b * 1.25f)) {
+        if (r > 120 && r > (g + (g >> 2)) && r > (b + (b >> 2))) {
             red_pixel_count++;
             
             // Highlight with vivid red in the visual output map
