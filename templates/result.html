@@ -12,11 +12,186 @@
     .gauge-fill-high { background: var(--color-critical) !important; box-shadow: 0 0 10px rgba(255, 75, 85, 0.4) !important; }
     .gauge-fill-medium { background: var(--color-warning) !important; box-shadow: 0 0 10px rgba(255, 150, 0, 0.3) !important; }
     .gauge-fill-low { background: var(--color-success) !important; box-shadow: 0 0 10px rgba(75, 255, 145, 0.3) !important; }
+
+    /* ==========================================================================
+       Print & PDF Document Styles (@media print)
+       ========================================================================== */
+    @media print {
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+
+        /* Force graphics and colors to preserve in print window */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body, html {
+            background: #0b1329 !important;
+            color: #f8fafc !important;
+            font-family: 'Poppins', sans-serif, Arial !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Hide screen navigation, buttons, background canvas & scripts */
+        header.nav-header,
+        .global-page-loader,
+        #canvas-particles,
+        .floating-glow-orb,
+        .visual-tabs,
+        .result-actions-container,
+        footer,
+        .flash-container,
+        .scanner-line {
+            display: none !important;
+        }
+
+        /* Main Container layout for print */
+        main.main-container,
+        .result-layout {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Header Card */
+        .result-header-card {
+            background: #131f37 !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 12px !important;
+            padding: 18px 24px !important;
+            margin-bottom: 16px !important;
+            box-shadow: none !important;
+        }
+
+        .result-header-title {
+            color: #ffffff !important;
+            font-size: 20pt !important;
+            margin: 0 !important;
+        }
+
+        .result-header-type {
+            color: #00f2fe !important;
+        }
+
+        .result-header-badge-label {
+            color: #94a3b8 !important;
+            font-size: 9pt !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1px !important;
+        }
+
+        .badge-emergency {
+            padding: 6px 14px !important;
+            font-size: 10pt !important;
+            border-radius: 20px !important;
+        }
+
+        /* Metrics Gauge Grid */
+        .diagnostic-gauges-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 12px !important;
+            margin-bottom: 18px !important;
+        }
+
+        .gauge-card {
+            background: #131f37 !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 10px !important;
+            padding: 14px 10px !important;
+            text-align: center !important;
+        }
+
+        .gauge-card .label {
+            color: #94a3b8 !important;
+            font-size: 8.5pt !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.5px !important;
+        }
+
+        .gauge-card .value {
+            font-size: 18pt !important;
+            font-weight: 700 !important;
+            margin: 6px 0 !important;
+            display: block !important;
+        }
+
+        .gauge-card-desc {
+            color: #64748b !important;
+            font-size: 8pt !important;
+            margin: 0 !important;
+        }
+
+        .gauge-bar-outer {
+            height: 4px !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-radius: 2px !important;
+            margin: 6px 0 !important;
+        }
+
+        /* Image View Comparison Section */
+        .image-comparison-dashboard {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 16px !important;
+            margin-bottom: 18px !important;
+        }
+
+        .comparison-box {
+            background: #131f37 !important;
+            border: 1px solid #1e293b !important;
+            border-radius: 10px !important;
+            padding: 14px !important;
+        }
+
+        .comparison-box h3 {
+            color: #00f2fe !important;
+            font-size: 11pt !important;
+            margin: 0 0 10px 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+        }
+
+        .comparison-image-wrapper {
+            background: #090f1d !important;
+            border-radius: 8px !important;
+            padding: 6px !important;
+            text-align: center !important;
+        }
+
+        .comparison-image-wrapper img {
+            max-width: 100% !important;
+            max-height: 210px !important;
+            object-fit: contain !important;
+            border-radius: 6px !important;
+        }
+
+
+
+        /* Metadata Footer */
+        .report-meta-footer {
+            display: flex !important;
+            justify-content: space-between !important;
+            color: #64748b !important;
+            font-size: 8.5pt !important;
+            border-top: 1px solid #1e293b !important;
+            padding-top: 12px !important;
+            margin-top: 10px !important;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 
+<!-- Screen Display & Printable Dashboard -->
 <div class="result-layout">
     
     <!-- Header Banner -->
@@ -115,7 +290,6 @@
                 <span id="processedViewLabel">C-Sobel Gradient Map</span>
             </h3>
             <div class="comparison-image-wrapper scanner-container">
-                <!-- Starts with Sobel edge map -->
                 <img id="processedDisplayImg" src="{{ visuals.sobel }}" alt="C Preprocessed wound visualization">
                 <div class="scanner-line" id="processedScanner"></div>
             </div>
@@ -128,19 +302,8 @@
             </div>
         </div>
     </div>
-    
-    <!-- Actionable Medical Recommendations Checklist -->
-    <div class="treatment-plan-card">
-        <h3>
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
-            Clinical Action Checklist & First Aid Guidance
-        </h3>
-        <p class="treatment-plan-subtitle">
-            Please execute the following medical hygiene checklist step-by-step. Toggle the checklist boxes as you accomplish them to stay organized.
-        </p>
-        
-        <div class="treatment-checklist">{%- for bullet in first_aid_bullets -%}<div class="checklist-item"><input type="checkbox" class="checklist-checkbox" id="bullet-{{ loop.index }}" aria-label="Checklist Item {{ loop.index }}"><label class="checklist-content" for="bullet-{{ loop.index }}">{{ bullet }}</label></div>{%- endfor -%}</div>
-    </div>
+
+
     
     <!-- Diagnostics Controls / Actions -->
     <div class="result-actions-container">
@@ -164,7 +327,6 @@
 {% block scripts %}
 <script>
     function toggleView(type, label, srcUrl, btnElement) {
-        // Toggle Active Tab Style
         const btns = document.querySelectorAll('.visual-tab-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         
@@ -172,20 +334,17 @@
             btnElement.classList.add('active');
         }
         
-        // Update Display Elements
         document.getElementById('processedViewLabel').innerText = label;
         document.getElementById('processedDisplayImg').src = srcUrl;
 
-        // Restart laser scanning animation to give a fresh convolving feedback
         const scanner = document.getElementById('processedScanner');
         if (scanner) {
             scanner.style.animation = 'none';
-            scanner.offsetHeight; // trigger DOM reflow
+            scanner.offsetHeight;
             scanner.style.animation = 'laserSweep 2.2s infinite ease-in-out';
         }
     }
 
-    // Set up click event listeners on visual tab buttons to resolve inline quote concerns
     document.addEventListener("DOMContentLoaded", () => {
         document.querySelectorAll('.visual-tab-btn').forEach(btn => {
             btn.addEventListener('click', function() {
