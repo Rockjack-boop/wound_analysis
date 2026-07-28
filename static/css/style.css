@@ -1888,6 +1888,11 @@ body::before {
     min-height: 80vh;
 }
 
+.holder.hero-holder {
+    min-height: initial;
+    margin: 1rem auto;
+}
+
 .box {
     position: relative;
     width: 380px;
